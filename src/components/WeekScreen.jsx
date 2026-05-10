@@ -238,7 +238,7 @@ export default function WeekScreen({ plan, recipes, rolling, rollNames, onArvo, 
   }, [plan]);
 
   return (
-    <div style={{ paddingBottom: 100 }}>
+    <div style={{ paddingBottom: 24 }}>
       <div style={{ padding: '8px 22px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: C.turkDeep, fontWeight: 600, fontSize: 13, letterSpacing: 0.4 }}>
           <Icon name="users" size={14} /> {family}

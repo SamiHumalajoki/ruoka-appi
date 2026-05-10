@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { C, SLOTS, TWEAK_DEFAULTS } from './constants.js';
 import { loadState, saveState, pickRandom } from './utils.js';
 import { DEFAULT_RECIPES } from './data/recipes.js';
-import IOSDevice from './components/ios/IOSDevice.jsx';
 import WeekScreen from './components/WeekScreen.jsx';
 import RecipesScreen, { AddSheet } from './components/RecipesScreen.jsx';
 import RecipeSheet from './components/RecipeSheet.jsx';
@@ -15,7 +14,9 @@ function TabBar({ tab, setTab }) {
   ];
   return (
     <div style={{
-      position: 'absolute', left: 12, right: 12, bottom: 22, zIndex: 40,
+      margin: '6px 12px',
+      paddingBottom: 'env(safe-area-inset-bottom, 8px)',
+      flexShrink: 0,
       background: 'rgba(255,255,255,0.85)',
       backdropFilter: 'blur(20px) saturate(180%)',
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
@@ -170,42 +171,44 @@ export default function App() {
   };
 
   return (
-    <IOSDevice width={402} height={874}>
-      <div style={{ height: '100%', background: C.bg, position: 'relative' }}>
-        <div style={{ height: '100%', overflow: 'auto', paddingTop: 16, paddingBottom: 88 }}>
-          {tab === 'viikko' && (
-            <WeekScreen
-              plan={plan} recipes={recipes}
-              rolling={rolling} rollNames={rollNames}
-              onArvo={arvoOne}
-              onOpen={(idx, slot) => setOpenKey(`${idx}-${slot}`)}
-              onArvoAll={arvoAll} onAcceptAll={acceptAll} onClear={clearAll}
-              family={tweaks.family}
-            />
-          )}
-          {tab === 'reseptit' && (
-            <RecipesScreen
-              recipes={recipes}
-              onOpen={id => setOpenKey(`browse-${id}`)}
-              onAdd={() => setAddOpen(true)}
-            />
-          )}
-        </div>
-
-        <RecipeSheet
-          open={!!modal}
-          recipe={modal?.recipe}
-          status={modal?.status}
-          onClose={() => setOpenKey(null)}
-          onAccept={() => acceptOne(modal.key)}
-          onReroll={() => rerollOne(modal.key)}
-          onUnlock={() => unlockOne(modal.key)}
-          onClear={() => clearOne(modal.key)}
-        />
-        <AddSheet open={addOpen} onClose={() => setAddOpen(false)} onSave={handleAdd} />
-
-        <TabBar tab={tab} setTab={setTab} />
+    <div style={{
+      height: '100dvh', background: C.bg,
+      display: 'flex', flexDirection: 'column',
+      width: '100%', maxWidth: 480, position: 'relative', overflow: 'hidden',
+    }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingTop: 16 }}>
+        {tab === 'viikko' && (
+          <WeekScreen
+            plan={plan} recipes={recipes}
+            rolling={rolling} rollNames={rollNames}
+            onArvo={arvoOne}
+            onOpen={(idx, slot) => setOpenKey(`${idx}-${slot}`)}
+            onArvoAll={arvoAll} onAcceptAll={acceptAll} onClear={clearAll}
+            family={tweaks.family}
+          />
+        )}
+        {tab === 'reseptit' && (
+          <RecipesScreen
+            recipes={recipes}
+            onOpen={id => setOpenKey(`browse-${id}`)}
+            onAdd={() => setAddOpen(true)}
+          />
+        )}
       </div>
-    </IOSDevice>
+
+      <RecipeSheet
+        open={!!modal}
+        recipe={modal?.recipe}
+        status={modal?.status}
+        onClose={() => setOpenKey(null)}
+        onAccept={() => acceptOne(modal.key)}
+        onReroll={() => rerollOne(modal.key)}
+        onUnlock={() => unlockOne(modal.key)}
+        onClear={() => clearOne(modal.key)}
+      />
+      <AddSheet open={addOpen} onClose={() => setAddOpen(false)} onSave={handleAdd} />
+
+      <TabBar tab={tab} setTab={setTab} />
+    </div>
   );
 }

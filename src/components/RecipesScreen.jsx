@@ -190,7 +190,7 @@ export default function RecipesScreen({ recipes, onOpen, onAdd }) {
   ];
 
   return (
-    <div style={{ paddingBottom: 100 }}>
+    <div style={{ paddingBottom: 24 }}>
       <div style={{ padding: '8px 22px 12px' }}>
         <div style={{ fontSize: 30, fontWeight: 800, color: C.ink, letterSpacing: -0.8 }}>Reseptit</div>
         <div style={{ fontSize: 14, color: C.ink2, marginTop: 4 }}>
@@ -267,7 +267,7 @@ export default function RecipesScreen({ recipes, onOpen, onAdd }) {
       </div>
 
       <button onClick={onAdd} style={{
-        position: 'absolute', bottom: 110, right: 18, zIndex: 50,
+        position: 'fixed', bottom: 90, right: 18, zIndex: 50,
         width: 60, height: 60, borderRadius: 18, border: 'none',
         background: C.turk, color: '#fff', cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
