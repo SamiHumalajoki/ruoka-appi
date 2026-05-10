@@ -26,7 +26,7 @@ function TabBar({ tab, setTab }) {
       {tabs.map(t => {
         const on = tab === t.id;
         return (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
+          <button key={t.id} onClick={() => setTab(t.id)} className="tab-btn" style={{
             flex: 1, height: 52, borderRadius: 17,
             background: on ? C.turkSoft : 'transparent', border: 'none',
             color: on ? C.turkDark : C.ink3, cursor: 'pointer', fontFamily: 'inherit',
@@ -171,24 +171,26 @@ export default function App() {
 
   return (
     <IOSDevice width={402} height={874}>
-      <div style={{ height: '100%', overflow: 'auto', background: C.bg, paddingTop: 56, position: 'relative' }}>
-        {tab === 'viikko' && (
-          <WeekScreen
-            plan={plan} recipes={recipes}
-            rolling={rolling} rollNames={rollNames}
-            onArvo={arvoOne}
-            onOpen={(idx, slot) => setOpenKey(`${idx}-${slot}`)}
-            onArvoAll={arvoAll} onAcceptAll={acceptAll} onClear={clearAll}
-            family={tweaks.family}
-          />
-        )}
-        {tab === 'reseptit' && (
-          <RecipesScreen
-            recipes={recipes}
-            onOpen={id => setOpenKey(`browse-${id}`)}
-            onAdd={() => setAddOpen(true)}
-          />
-        )}
+      <div style={{ height: '100%', background: C.bg, position: 'relative' }}>
+        <div style={{ height: '100%', overflow: 'auto', paddingTop: 16, paddingBottom: 88 }}>
+          {tab === 'viikko' && (
+            <WeekScreen
+              plan={plan} recipes={recipes}
+              rolling={rolling} rollNames={rollNames}
+              onArvo={arvoOne}
+              onOpen={(idx, slot) => setOpenKey(`${idx}-${slot}`)}
+              onArvoAll={arvoAll} onAcceptAll={acceptAll} onClear={clearAll}
+              family={tweaks.family}
+            />
+          )}
+          {tab === 'reseptit' && (
+            <RecipesScreen
+              recipes={recipes}
+              onOpen={id => setOpenKey(`browse-${id}`)}
+              onAdd={() => setAddOpen(true)}
+            />
+          )}
+        </div>
 
         <RecipeSheet
           open={!!modal}
