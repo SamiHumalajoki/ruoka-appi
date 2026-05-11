@@ -44,15 +44,6 @@ export default function IOSDevice({ children, width = 402, height = 874, dark = 
       WebkitFontSmoothing: 'antialiased',
       flexShrink: 0,
     }}>
-      {/* Dynamic island */}
-      <div style={{
-        position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)',
-        width: 126, height: 37, borderRadius: 24, background: '#000', zIndex: 50,
-      }} />
-      {/* Status bar */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
-        <IOSStatusBar dark={dark} />
-      </div>
       {/* Content */}
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>

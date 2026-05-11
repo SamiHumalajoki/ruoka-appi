@@ -1,23 +1,21 @@
 *, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; min-height: 100vh; }
+html, body { margin: 0; padding: 0; height: 100%; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   color: #0F2A2E;
-  background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(20,184,166,0.18), transparent 60%),
-    radial-gradient(900px 600px at -10% 100%, rgba(255,122,89,0.15), transparent 60%),
-    #0A1F22;
+  background: #F2F2F7;
 }
 #root {
-  min-height: 100vh;
+  height: 100%;
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 40px 16px;
 }
 input, textarea, button { font-family: inherit; }
 ::-webkit-scrollbar { width: 0; height: 0; }
+
+.tab-btn:hover { opacity: 0.75; }
+.tab-btn:active { transform: scale(0.95); }
 
 @keyframes rospin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
