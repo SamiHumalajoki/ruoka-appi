@@ -163,7 +163,7 @@ export function AddSheet({ open, onClose, onSave }) {
   );
 }
 
-export default function RecipesScreen({ recipes, onOpen, onAdd }) {
+export default function RecipesScreen({ recipes, onOpen, onAdd, onSearch }) {
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState('kaikki');
 
@@ -266,15 +266,26 @@ export default function RecipesScreen({ recipes, onOpen, onAdd }) {
         ))}
       </div>
 
-      <button onClick={onAdd} style={{
-        position: 'absolute', bottom: 110, right: 18, zIndex: 50,
-        width: 60, height: 60, borderRadius: 18, border: 'none',
-        background: C.turk, color: '#fff', cursor: 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: `0 12px 24px ${C.turk}55, 0 2px 4px rgba(0,0,0,0.1)`,
-      }}>
-        <Icon name="plus" size={28} stroke={2.4} />
-      </button>
+      <div style={{ position: 'absolute', bottom: 110, right: 18, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {onSearch && (
+          <button onClick={onSearch} style={{
+            width: 60, height: 60, borderRadius: 18, border: 'none',
+            background: C.coral, color: '#fff', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 12px 24px ${C.coral}55, 0 2px 4px rgba(0,0,0,0.1)`,
+          }}>
+            <Icon name="spark" size={26} stroke={1.8} />
+          </button>
+        )}
+        <button onClick={onAdd} style={{
+          width: 60, height: 60, borderRadius: 18, border: 'none',
+          background: C.turk, color: '#fff', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: `0 12px 24px ${C.turk}55, 0 2px 4px rgba(0,0,0,0.1)`,
+        }}>
+          <Icon name="plus" size={28} stroke={2.4} />
+        </button>
+      </div>
     </div>
   );
 }

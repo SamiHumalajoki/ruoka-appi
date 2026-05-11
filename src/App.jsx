@@ -1,22 +1,27 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { C, SLOTS, TWEAK_DEFAULTS } from './constants.js';
-import { loadState, saveState, pickRandom } from './utils.js';
+import { C, SLOTS, TWEAK_DEFAULTS, DEFAULT_PREFS } from './constants.js';
+import { loadState, saveState, mondayOf, weekKey, buildPool, computeWeights, weightedPick } from './utils.js';
 import { DEFAULT_RECIPES } from './data/recipes.js';
-import IOSDevice from './components/ios/IOSDevice.jsx';
+import AndroidDevice from './components/android/AndroidDevice.jsx';
+import HomeScreen from './components/HomeScreen.jsx';
 import WeekScreen from './components/WeekScreen.jsx';
+import ShoppingScreen, { AddToShoppingSheet } from './components/ShoppingScreen.jsx';
 import RecipesScreen, { AddSheet } from './components/RecipesScreen.jsx';
 import RecipeSheet from './components/RecipeSheet.jsx';
+import PreferencesSheet from './components/PreferencesSheet.jsx';
+import SearchSheet from './components/SearchSheet.jsx';
 import Icon from './components/Icon.jsx';
 
 function TabBar({ tab, setTab }) {
   const tabs = [
-    { id: 'viikko',   label: 'Viikko',   icon: 'home' },
+    { id: 'koti',     label: 'Koti',     icon: 'home' },
+    { id: 'ostokset', label: 'Ostokset', icon: 'cart' },
     { id: 'reseptit', label: 'Reseptit', icon: 'book' },
   ];
   return (
     <div style={{
       position: 'absolute', left: 12, right: 12, bottom: 22, zIndex: 40,
-      background: 'rgba(255,255,255,0.85)',
+      background: 'rgba(255,255,255,0.88)',
       backdropFilter: 'blur(20px) saturate(180%)',
       WebkitBackdropFilter: 'blur(20px) saturate(180%)',
       borderRadius: 22, padding: 6,
@@ -43,23 +48,57 @@ function TabBar({ tab, setTab }) {
 }
 
 export default function App() {
-  const [tab, setTab] = useState('viikko');
+  const [tab, setTab] = useState('koti');
   const [tweaks] = useState(TWEAK_DEFAULTS);
+
   const [recipes, setRecipes] = useState(() => {
     const s = loadState();
     const custom = s?.customRecipes || [];
     return [...DEFAULT_RECIPES, ...custom];
   });
-  const [plan, setPlan] = useState(() => loadState()?.plan || {});
+
+  const [weeks, setWeeks] = useState(() => {
+    const s = loadState();
+    if (s?.plan && !s?.weeks) {
+      const k = weekKey(mondayOf(new Date()));
+      return { [k]: s.plan };
+    }
+    return s?.weeks || {};
+  });
+
+  const [shopping, setShopping] = useState(() => loadState()?.shopping || []);
+  const [prefs, setPrefs] = useState(() => ({ ...DEFAULT_PREFS, ...(loadState()?.prefs || {}) }));
+
+  const [selectedMonday, setSelectedMonday] = useState(null);
+
   const [rolling, setRolling] = useState(null);
   const [rollNames, setRollNames] = useState({});
   const [openKey, setOpenKey] = useState(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [prefsOpen, setPrefsOpen] = useState(false);
+  const [addShoppingOpen, setAddShoppingOpen] = useState(false);
   const rollTimer = useRef(null);
 
   useEffect(() => {
-    saveState({ plan, customRecipes: recipes.filter(r => r.custom) });
-  }, [plan, recipes]);
+    saveState({ weeks, shopping, customRecipes: recipes.filter(r => r.custom), prefs });
+  }, [weeks, shopping, recipes, prefs]);
+
+  const activeKey = selectedMonday ? weekKey(selectedMonday) : null;
+  const plan = activeKey ? (weeks[activeKey] || {}) : {};
+
+  const setPlan = (updater) => {
+    if (!activeKey) return;
+    setWeeks(prev => ({
+      ...prev,
+      [activeKey]: typeof updater === 'function' ? updater(prev[activeKey] || {}) : updater,
+    }));
+  };
+
+  const currentMon = mondayOf(new Date());
+  const currentKey = weekKey(currentMon);
+  const currentPlan = weeks[currentKey] || {};
+  const hasPlan = Object.values(currentPlan).some(e => e && (e.status === 'locked' || e.status === 'pending'));
 
   const usedBySlot = useMemo(() => {
     const m = { lounas: new Set(), paivallinen: new Set() };
@@ -71,20 +110,16 @@ export default function App() {
     return m;
   }, [plan]);
 
-  const eligibleFor = (slot, exclude = new Set()) => {
-    const ex = new Set([...exclude, ...usedBySlot[slot]]);
-    return recipes.filter(r => r.slots.includes(slot) && !ex.has(r.id));
-  };
-
   const arvoOne = (idx, slot) => {
     const key = `${idx}-${slot}`;
     if (rolling) return;
     const current = plan[key];
-    const exclude = new Set();
+    const exclude = new Set([...(usedBySlot[slot] || [])]);
     if (current) exclude.add(current.id);
-    const pool = eligibleFor(slot, exclude);
+    const pool = buildPool(recipes, slot, prefs, exclude);
     if (pool.length === 0) return;
-    const winner = pickRandom(pool);
+    const weights = computeWeights(pool, prefs);
+    const winner = weightedPick(pool, weights) || pool[0];
 
     setRolling(key);
     const namePool = pool.length > 1 ? pool : recipes.filter(r => r.slots.includes(slot));
@@ -104,15 +139,16 @@ export default function App() {
     const newPlan = { ...plan };
     const used = { lounas: new Set(), paivallinen: new Set() };
     Object.entries(plan).forEach(([k, v]) => {
-      if (v && v.status === 'locked') used[k.split('-')[1]].add(v.id);
+      if (v?.status === 'locked') used[k.split('-')[1]]?.add(v.id);
     });
     for (let i = 0; i < 7; i++) {
       for (const s of SLOTS) {
         const key = `${i}-${s.id}`;
         if (newPlan[key]?.status === 'locked') continue;
-        const pool = recipes.filter(r => r.slots.includes(s.id) && !used[s.id].has(r.id));
+        const pool = buildPool(recipes, s.id, prefs, used[s.id] || new Set());
         if (pool.length === 0) continue;
-        const w = pickRandom(pool);
+        const weights = computeWeights(pool, prefs);
+        const w = weightedPick(pool, weights) || pool[0];
         newPlan[key] = { id: w.id, status: 'pending' };
         used[s.id].add(w.id);
       }
@@ -121,9 +157,11 @@ export default function App() {
   };
 
   const acceptAll = () => {
-    const np = { ...plan };
-    Object.keys(np).forEach(k => { if (np[k].status === 'pending') np[k] = { ...np[k], status: 'locked' }; });
-    setPlan(np);
+    setPlan(prev => {
+      const np = { ...prev };
+      Object.keys(np).forEach(k => { if (np[k]?.status === 'pending') np[k] = { ...np[k], status: 'locked' }; });
+      return np;
+    });
   };
 
   const clearAll = () => setPlan({});
@@ -169,24 +207,90 @@ export default function App() {
     setAddOpen(false);
   };
 
+  const handleSearchSave = recipe => {
+    setRecipes(prev => [recipe, ...prev]);
+    setSearchOpen(false);
+  };
+
+  const handleShoppingConfirm = (items) => {
+    const newItems = items.map(it => ({
+      id: 'sh' + Date.now() + Math.random(),
+      key: it.key,
+      text: it.text,
+      name: it.name,
+      qtyLabel: it.qtyLabel,
+      sources: it.sources ? [...it.sources] : [],
+      checked: false,
+    }));
+    setShopping(prev => [...prev, ...newItems]);
+    setAddShoppingOpen(false);
+  };
+
+  const handleAddToShopping = () => {
+    setAddShoppingOpen(true);
+  };
+
+  const handlePickWeek = (monday) => {
+    setSelectedMonday(monday);
+  };
+
+  const handleBack = () => {
+    setSelectedMonday(null);
+  };
+
+  const showHome = tab === 'koti' && !selectedMonday;
+  const showWeek = tab === 'koti' && !!selectedMonday;
+
   return (
-    <IOSDevice width={402} height={874}>
-      <div style={{ height: '100%', overflow: 'auto', background: C.bg, paddingTop: 56, position: 'relative' }}>
-        {tab === 'viikko' && (
-          <WeekScreen
-            plan={plan} recipes={recipes}
-            rolling={rolling} rollNames={rollNames}
-            onArvo={arvoOne}
-            onOpen={(idx, slot) => setOpenKey(`${idx}-${slot}`)}
-            onArvoAll={arvoAll} onAcceptAll={acceptAll} onClear={clearAll}
+    <AndroidDevice width={412} height={892}>
+      <div style={{ height: '100%', overflow: 'auto', background: C.bg, paddingTop: 4, position: 'relative' }}>
+        {showHome && (
+          <HomeScreen
+            weeks={weeks}
+            recipes={recipes}
             family={tweaks.family}
+            prefs={prefs}
+            onPickWeek={handlePickWeek}
+            onOpenPrefs={() => setPrefsOpen(true)}
           />
         )}
+
+        {showWeek && (
+          <WeekScreen
+            plan={plan}
+            recipes={recipes}
+            rolling={rolling}
+            rollNames={rollNames}
+            onArvo={arvoOne}
+            onOpen={(idx, slot) => setOpenKey(`${idx}-${slot}`)}
+            onArvoAll={arvoAll}
+            onAcceptAll={acceptAll}
+            onClear={clearAll}
+            family={tweaks.family}
+            monday={selectedMonday}
+            onBack={handleBack}
+            onAddToShopping={handleAddToShopping}
+          />
+        )}
+
+        {tab === 'ostokset' && (
+          <ShoppingScreen
+            items={shopping}
+            hasPlan={hasPlan}
+            onToggle={id => setShopping(prev => prev.map(it => it.id === id ? { ...it, checked: !it.checked } : it))}
+            onRemove={id => setShopping(prev => prev.filter(it => it.id !== id))}
+            onClearChecked={() => setShopping(prev => prev.filter(it => !it.checked))}
+            onClearAll={() => setShopping([])}
+            onOpenAdd={() => setAddShoppingOpen(true)}
+          />
+        )}
+
         {tab === 'reseptit' && (
           <RecipesScreen
             recipes={recipes}
             onOpen={id => setOpenKey(`browse-${id}`)}
             onAdd={() => setAddOpen(true)}
+            onSearch={() => setSearchOpen(true)}
           />
         )}
 
@@ -200,10 +304,28 @@ export default function App() {
           onUnlock={() => unlockOne(modal.key)}
           onClear={() => clearOne(modal.key)}
         />
-        <AddSheet open={addOpen} onClose={() => setAddOpen(false)} onSave={handleAdd} />
 
-        <TabBar tab={tab} setTab={setTab} />
+        <AddSheet open={addOpen} onClose={() => setAddOpen(false)} onSave={handleAdd} />
+        <SearchSheet open={searchOpen} onClose={() => setSearchOpen(false)} onSave={handleSearchSave} />
+        <PreferencesSheet
+          open={prefsOpen}
+          onClose={() => setPrefsOpen(false)}
+          prefs={prefs}
+          onChange={setPrefs}
+          recipes={recipes}
+        />
+        <AddToShoppingSheet
+          open={addShoppingOpen}
+          plan={weeks[currentKey] || {}}
+          recipes={recipes}
+          existing={shopping}
+          eaters={prefs.eaters}
+          onClose={() => setAddShoppingOpen(false)}
+          onConfirm={handleShoppingConfirm}
+        />
+
+        <TabBar tab={tab} setTab={id => { setTab(id); if (id !== 'koti') setSelectedMonday(null); }} />
       </div>
-    </IOSDevice>
+    </AndroidDevice>
   );
 }

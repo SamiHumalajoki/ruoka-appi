@@ -22,6 +22,8 @@ export default function Icon({ name, size = 20, color = 'currentColor', stroke =
     case 'flame':  return <svg {...p}><path d="M12 3s4 4 4 8a4 4 0 0 1-8 0c0-2 1-3 1-3s-1 5 3 5"/></svg>;
     case 'broom':  return <svg {...p}><path d="M14 4l6 6M5 19l5-5 5 5-5 5z"/><path d="M10 14L20 4"/></svg>;
     case 'users':  return <svg {...p}><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9" r="2.4"/><path d="M3 19c0-3 3-5 6-5s6 2 6 5M14 19c0-2 2-4 4-4s3 1 3 3"/></svg>;
+    case 'cart':   return <svg {...p}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>;
+    case 'chevLeft': return <svg {...p}><path d="M15 6l-6 6 6 6"/></svg>;
     default: return null;
   }
 }

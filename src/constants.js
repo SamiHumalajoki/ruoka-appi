@@ -4,11 +4,11 @@ export const C = {
   turkDark:  '#0B5C56',
   turkLite:  '#D6F4EF',
   turkSoft:  '#EAF8F5',
-  coral:     '#FF7A59',
-  coralDeep: '#E55835',
-  coralLite: '#FFE2D8',
-  amber:     '#F4B740',
-  amberLite: '#FFF1D2',
+  coral:     '#5171A5',
+  coralDeep: '#3F5A8C',
+  coralLite: '#E4ECF8',
+  amber:     '#3F3047',
+  amberLite: '#ECE7F0',
   bg:        '#FAF7F2',
   card:      '#FFFFFF',
   ink:       '#0F2A2E',
@@ -45,6 +45,18 @@ export const STORAGE_KEY = 'ruoka-appi-v1';
 
 export const TWEAK_DEFAULTS = {
   primary: '#14B8A6',
-  accent:  '#FF7A59',
+  accent:  '#5171A5',
   family:  'Virtaset',
 };
+
+export const DEFAULT_PREFS = {
+  eaters: 4,
+  customMode: 'off',
+  vegOnly: false,
+  seasonal: false,
+};
+
+export const MONTHS_FULL = [
+  'Tammikuu','Helmikuu','Maaliskuu','Huhtikuu','Toukokuu','Kesäkuu',
+  'Heinäkuu','Elokuu','Syyskuu','Lokakuu','Marraskuu','Joulukuu',
+];
