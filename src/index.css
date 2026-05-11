@@ -9,7 +9,7 @@ body {
 #root {
   height: 100%;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
 }
 input, textarea, button { font-family: inherit; }
 ::-webkit-scrollbar { width: 0; height: 0; }

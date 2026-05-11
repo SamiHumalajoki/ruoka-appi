@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { C, SLOTS, TWEAK_DEFAULTS, DEFAULT_PREFS } from './constants.js';
 import { loadState, saveState, mondayOf, weekKey, buildPool, computeWeights, weightedPick } from './utils.js';
 import { DEFAULT_RECIPES } from './data/recipes.js';
-import AndroidDevice from './components/android/AndroidDevice.jsx';
 import HomeScreen from './components/HomeScreen.jsx';
 import WeekScreen from './components/WeekScreen.jsx';
 import ShoppingScreen, { AddToShoppingSheet } from './components/ShoppingScreen.jsx';
@@ -20,29 +19,35 @@ function TabBar({ tab, setTab }) {
   ];
   return (
     <div style={{
-      position: 'absolute', left: 12, right: 12, bottom: 22, zIndex: 40,
-      background: 'rgba(255,255,255,0.88)',
-      backdropFilter: 'blur(20px) saturate(180%)',
-      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-      borderRadius: 22, padding: 6,
-      display: 'flex', gap: 4,
-      boxShadow: '0 -2px 6px rgba(15,42,46,0.04), 0 12px 30px rgba(15,42,46,0.10), 0 0 0 1px rgba(0,0,0,0.04)',
+      background: C.bg,
+      padding: '6px 12px',
+      paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))',
+      flexShrink: 0,
     }}>
-      {tabs.map(t => {
-        const on = tab === t.id;
-        return (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            flex: 1, height: 52, borderRadius: 17,
-            background: on ? C.turkSoft : 'transparent', border: 'none',
-            color: on ? C.turkDark : C.ink3, cursor: 'pointer', fontFamily: 'inherit',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-            fontSize: 11.5, fontWeight: 700, letterSpacing: 0.2,
-          }}>
-            <Icon name={t.icon} size={20} stroke={on ? 2.2 : 1.8} />
-            {t.label}
-          </button>
-        );
-      })}
+      <div style={{
+        background: 'rgba(255,255,255,0.88)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        borderRadius: 22, padding: 6,
+        display: 'flex', gap: 4,
+        boxShadow: '0 -2px 6px rgba(15,42,46,0.04), 0 12px 30px rgba(15,42,46,0.10), 0 0 0 1px rgba(0,0,0,0.04)',
+      }}>
+        {tabs.map(t => {
+          const on = tab === t.id;
+          return (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              flex: 1, height: 52, borderRadius: 17,
+              background: on ? C.turkSoft : 'transparent', border: 'none',
+              color: on ? C.turkDark : C.ink3, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+              fontSize: 11.5, fontWeight: 700, letterSpacing: 0.2,
+            }}>
+              <Icon name={t.icon} size={20} stroke={on ? 2.2 : 1.8} />
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -242,8 +247,8 @@ export default function App() {
   const showWeek = tab === 'koti' && !!selectedMonday;
 
   return (
-    <AndroidDevice width={412} height={892}>
-      <div style={{ height: '100%', overflow: 'auto', background: C.bg, paddingTop: 4, position: 'relative' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: C.bg }}>
+      <div style={{ flex: 1, overflow: 'auto', paddingTop: 4 }}>
         {showHome && (
           <HomeScreen
             weeks={weeks}
@@ -324,8 +329,8 @@ export default function App() {
           onConfirm={handleShoppingConfirm}
         />
 
-        <TabBar tab={tab} setTab={id => { setTab(id); if (id !== 'koti') setSelectedMonday(null); }} />
       </div>
-    </AndroidDevice>
+      <TabBar tab={tab} setTab={id => { setTab(id); if (id !== 'koti') setSelectedMonday(null); }} />
+    </div>
   );
 }
