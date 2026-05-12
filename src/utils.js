@@ -64,15 +64,11 @@ export async function fetchState() {
 }
 
 export async function postState(s) {
-  try {
-    await fetch('/api/state', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(s),
-    });
-  } catch {
-    saveState(s);
-  }
+  await fetch('/api/state', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(s),
+  });
 }
 
 export function pickRandom(pool, exclude = new Set()) {

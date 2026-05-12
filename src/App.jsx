@@ -90,10 +90,14 @@ export default function App() {
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [addShoppingOpen, setAddShoppingOpen] = useState(false);
   const rollTimer = useRef(null);
+  const saveTimer = useRef(null);
 
   useEffect(() => {
     if (!loaded) return;
-    postState({ weeks, shopping, customRecipes: recipes.filter(r => r.custom), prefs });
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      postState({ weeks, shopping, customRecipes: recipes.filter(r => r.custom), prefs });
+    }, 500);
   }, [weeks, shopping, recipes, prefs, loaded]);
 
   const activeKey = selectedMonday ? weekKey(selectedMonday) : null;
@@ -249,6 +253,8 @@ export default function App() {
   const handleBack = () => {
     setSelectedMonday(null);
   };
+
+  if (!loaded) return <div style={{ height: '100%', background: C.bg }} />;
 
   const showHome = tab === 'koti' && !selectedMonday;
   const showWeek = tab === 'koti' && !!selectedMonday;
