@@ -45,6 +45,36 @@ export function saveState(s) {
   try { localStorage.setItem('ruoka-appi-v1', JSON.stringify(s)); } catch {}
 }
 
+export async function fetchState() {
+  try {
+    const r = await fetch('/api/state');
+    if (!r.ok) throw new Error('api error');
+    const serverState = await r.json();
+    if (Object.keys(serverState).length === 0) {
+      const local = loadState();
+      if (local) {
+        await postState(local);
+        return local;
+      }
+    }
+    return Object.keys(serverState).length > 0 ? serverState : null;
+  } catch {
+    return loadState();
+  }
+}
+
+export async function postState(s) {
+  try {
+    await fetch('/api/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(s),
+    });
+  } catch {
+    saveState(s);
+  }
+}
+
 export function pickRandom(pool, exclude = new Set()) {
   const candidates = pool.filter(r => !exclude.has(r.id));
   if (candidates.length === 0) return pool[Math.floor(Math.random() * pool.length)];

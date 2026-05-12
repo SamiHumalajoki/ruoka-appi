@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { C, SLOTS, TWEAK_DEFAULTS, DEFAULT_PREFS } from './constants.js';
-import { loadState, saveState, mondayOf, weekKey, buildPool, computeWeights, weightedPick } from './utils.js';
+import { fetchState, postState, mondayOf, weekKey, buildPool, computeWeights, weightedPick } from './utils.js';
 import { DEFAULT_RECIPES } from './data/recipes.js';
 import HomeScreen from './components/HomeScreen.jsx';
 import WeekScreen from './components/WeekScreen.jsx';
@@ -56,23 +56,29 @@ export default function App() {
   const [tab, setTab] = useState('koti');
   const [tweaks] = useState(TWEAK_DEFAULTS);
 
-  const [recipes, setRecipes] = useState(() => {
-    const s = loadState();
-    const custom = s?.customRecipes || [];
-    return [...DEFAULT_RECIPES, ...custom];
-  });
+  const [loaded, setLoaded] = useState(false);
+  const [recipes, setRecipes] = useState([...DEFAULT_RECIPES]);
+  const [weeks, setWeeks] = useState({});
+  const [shopping, setShopping] = useState([]);
+  const [prefs, setPrefs] = useState(DEFAULT_PREFS);
 
-  const [weeks, setWeeks] = useState(() => {
-    const s = loadState();
-    if (s?.plan && !s?.weeks) {
-      const k = weekKey(mondayOf(new Date()));
-      return { [k]: s.plan };
-    }
-    return s?.weeks || {};
-  });
-
-  const [shopping, setShopping] = useState(() => loadState()?.shopping || []);
-  const [prefs, setPrefs] = useState(() => ({ ...DEFAULT_PREFS, ...(loadState()?.prefs || {}) }));
+  useEffect(() => {
+    fetchState().then(s => {
+      if (s) {
+        const custom = s.customRecipes || [];
+        if (custom.length > 0) setRecipes([...DEFAULT_RECIPES, ...custom]);
+        if (s.plan && !s.weeks) {
+          const k = weekKey(mondayOf(new Date()));
+          setWeeks({ [k]: s.plan });
+        } else if (s.weeks) {
+          setWeeks(s.weeks);
+        }
+        if (s.shopping) setShopping(s.shopping);
+        if (s.prefs) setPrefs(prev => ({ ...prev, ...s.prefs }));
+      }
+      setLoaded(true);
+    });
+  }, []);
 
   const [selectedMonday, setSelectedMonday] = useState(null);
 
@@ -86,8 +92,9 @@ export default function App() {
   const rollTimer = useRef(null);
 
   useEffect(() => {
-    saveState({ weeks, shopping, customRecipes: recipes.filter(r => r.custom), prefs });
-  }, [weeks, shopping, recipes, prefs]);
+    if (!loaded) return;
+    postState({ weeks, shopping, customRecipes: recipes.filter(r => r.custom), prefs });
+  }, [weeks, shopping, recipes, prefs, loaded]);
 
   const activeKey = selectedMonday ? weekKey(selectedMonday) : null;
   const plan = activeKey ? (weeks[activeKey] || {}) : {};
