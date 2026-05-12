@@ -116,23 +116,22 @@ export default function App() {
   const currentPlan = weeks[currentKey] || {};
   const hasPlan = Object.values(currentPlan).some(e => e && (e.status === 'locked' || e.status === 'pending'));
 
-  const usedBySlot = useMemo(() => {
-    const m = { lounas: new Set(), paivallinen: new Set() };
-    Object.entries(plan).forEach(([k, v]) => {
-      if (!v) return;
-      const slot = k.split('-')[1];
-      if (m[slot]) m[slot].add(v.id);
-    });
-    return m;
+  const usedThisWeek = useMemo(() => {
+    const s = new Set();
+    Object.values(plan).forEach(v => { if (v?.id) s.add(v.id); });
+    return s;
   }, [plan]);
 
   const arvoOne = (idx, slot) => {
     const key = `${idx}-${slot}`;
     if (rolling) return;
     const current = plan[key];
-    const exclude = new Set([...(usedBySlot[slot] || [])]);
-    if (current) exclude.add(current.id);
-    const pool = buildPool(recipes, slot, prefs, exclude);
+    // Exclude every recipe already used anywhere this week.
+    // The current slot's recipe is already in usedThisWeek, so it stays excluded (forces a new pick).
+    const exclude = new Set(usedThisWeek);
+    let pool = buildPool(recipes, slot, prefs, exclude);
+    // Fallback: if all recipes are taken, allow repeats but still avoid the current one.
+    if (pool.length === 0) pool = buildPool(recipes, slot, prefs, current ? new Set([current.id]) : new Set());
     if (pool.length === 0) return;
     const weights = computeWeights(pool, prefs);
     const winner = weightedPick(pool, weights) || pool[0];
@@ -153,20 +152,20 @@ export default function App() {
 
   const arvoAll = () => {
     const newPlan = { ...plan };
-    const used = { lounas: new Set(), paivallinen: new Set() };
-    Object.entries(plan).forEach(([k, v]) => {
-      if (v?.status === 'locked') used[k.split('-')[1]]?.add(v.id);
-    });
+    // Single set across all slots — no recipe can appear twice in the same week.
+    const used = new Set();
+    Object.entries(plan).forEach(([, v]) => { if (v?.status === 'locked') used.add(v.id); });
     for (let i = 0; i < 7; i++) {
       for (const s of SLOTS) {
         const key = `${i}-${s.id}`;
         if (newPlan[key]?.status === 'locked') continue;
-        const pool = buildPool(recipes, s.id, prefs, used[s.id] || new Set());
+        let pool = buildPool(recipes, s.id, prefs, used);
+        if (pool.length === 0) pool = buildPool(recipes, s.id, prefs, new Set());
         if (pool.length === 0) continue;
         const weights = computeWeights(pool, prefs);
         const w = weightedPick(pool, weights) || pool[0];
         newPlan[key] = { id: w.id, status: 'pending' };
-        used[s.id].add(w.id);
+        used.add(w.id);
       }
     }
     setPlan(newPlan);
