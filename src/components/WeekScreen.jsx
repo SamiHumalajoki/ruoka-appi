@@ -3,7 +3,7 @@ import { C, DAYS, SLOTS } from '../constants.js';
 import { isoWeek, rangeLabel, dateAt, mondayOf } from '../utils.js';
 import Icon from './Icon.jsx';
 
-function MealRow({ slot, recipe, status, onArvo, onOpen, rolling, rollName }) {
+function MealRow({ slot, recipe, status, onArvo, onOpen, onReroll, rolling, rollName }) {
   const isPending = status === 'pending';
   const isEmpty = status === 'empty';
   const isLocked = status === 'locked';
@@ -75,6 +75,15 @@ function MealRow({ slot, recipe, status, onArvo, onOpen, rolling, rollName }) {
               <Icon name="clock" size={11} />{recipe?.time} min
             </div>
           </div>
+          <button onClick={e => { e.stopPropagation(); onReroll(); }} style={{
+            width: 34, height: 34, borderRadius: 10, border: 'none',
+            background: isPending ? C.coral + '22' : C.ink + '0d',
+            color: isPending ? C.coralDeep : C.ink3,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', flexShrink: 0,
+          }}>
+            <Icon name="dice" size={16} color={isPending ? C.coralDeep : C.ink3} />
+          </button>
           <Icon name="chev" size={16} color={C.ink3} />
         </>
       )}
@@ -82,7 +91,7 @@ function MealRow({ slot, recipe, status, onArvo, onOpen, rolling, rollName }) {
   );
 }
 
-function DayCard({ idx, day, date, isToday, plan, recipes, rolling, rollNames, onArvo, onOpen }) {
+function DayCard({ idx, day, date, isToday, plan, recipes, rolling, rollNames, onArvo, onOpen, onReroll }) {
   return (
     <div style={{
       background: '#fff', borderRadius: 22,
@@ -112,6 +121,7 @@ function DayCard({ idx, day, date, isToday, plan, recipes, rolling, rollNames, o
               rolling={r} rollName={rollNames[key]}
               onArvo={() => onArvo(idx, s.id)}
               onOpen={() => onOpen(idx, s.id)}
+              onReroll={() => onReroll(idx, s.id)}
             />
           );
         })}
@@ -196,7 +206,7 @@ function HeroCard({ stats, onArvoAll, onAcceptAll, onClear }) {
   );
 }
 
-export default function WeekScreen({ plan, recipes, rolling, rollNames, onArvo, onOpen, onArvoAll, onAcceptAll, onClear, family, monday, onBack, onAddToShopping }) {
+export default function WeekScreen({ plan, recipes, rolling, rollNames, onArvo, onOpen, onReroll, onArvoAll, onAcceptAll, onClear, family, monday, onBack, onAddToShopping }) {
   const today = new Date();
   const currentMon = mondayOf(today);
   const isCurrent = monday.getTime() === currentMon.getTime();
@@ -261,7 +271,7 @@ export default function WeekScreen({ plan, recipes, rolling, rollNames, onArvo, 
             isToday={idx === todayIdx}
             plan={plan} recipes={recipes}
             rolling={rolling} rollNames={rollNames}
-            onArvo={onArvo} onOpen={onOpen}
+            onArvo={onArvo} onOpen={onOpen} onReroll={onReroll}
           />
         ))}
       </div>

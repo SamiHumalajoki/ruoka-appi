@@ -281,6 +281,7 @@ export default function App() {
             rollNames={rollNames}
             onArvo={arvoOne}
             onOpen={(idx, slot) => setOpenKey(`${idx}-${slot}`)}
+            onReroll={arvoOne}
             onArvoAll={arvoAll}
             onAcceptAll={acceptAll}
             onClear={clearAll}
