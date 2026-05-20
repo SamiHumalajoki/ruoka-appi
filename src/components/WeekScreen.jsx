@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { C, DAYS, SLOTS } from '../constants.js';
 import { isoWeek, rangeLabel, dateAt, mondayOf } from '../utils.js';
 import Icon from './Icon.jsx';
-import Badge from './Badge.jsx';
 
 function MealRow({ slot, recipe, status, onArvo, onOpen, rolling, rollName }) {
   const isPending = status === 'pending';
@@ -21,15 +20,6 @@ function MealRow({ slot, recipe, status, onArvo, onOpen, rolling, rollName }) {
         transition: 'background 200ms ease, border-color 200ms ease',
         minHeight: 64,
       }}>
-      <div style={{
-        width: 30, height: 30, borderRadius: 9,
-        background: slot === 'lounas' ? C.amberLite : '#E6E9F4',
-        color: slot === 'lounas' ? '#9C6A0A' : '#3F4985',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-      }}>
-        <Icon name={slotMeta.icon} size={16} />
-      </div>
-
       {isEmpty ? (
         <>
           <div style={{ flex: 1 }}>
@@ -67,7 +57,6 @@ function MealRow({ slot, recipe, status, onArvo, onOpen, rolling, rollName }) {
         </>
       ) : (
         <>
-          <Badge recipe={recipe} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 11, color: isPending ? C.coralDeep : C.ink3, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase' }}>
