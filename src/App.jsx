@@ -152,13 +152,14 @@ export default function App() {
 
   const arvoAll = () => {
     const newPlan = { ...plan };
-    // Single set across all slots — no recipe can appear twice in the same week.
     const used = new Set();
-    Object.entries(plan).forEach(([, v]) => { if (v?.status === 'locked') used.add(v.id); });
+    // Exclude all already-selected recipes (both locked and pending) from new draws.
+    Object.entries(plan).forEach(([, v]) => { if (v?.id) used.add(v.id); });
     for (let i = 0; i < 7; i++) {
       for (const s of SLOTS) {
         const key = `${i}-${s.id}`;
-        if (newPlan[key]?.status === 'locked') continue;
+        // Only draw for empty slots — preserve locked and pending.
+        if (newPlan[key]) continue;
         let pool = buildPool(recipes, s.id, prefs, used);
         if (pool.length === 0) pool = buildPool(recipes, s.id, prefs, new Set());
         if (pool.length === 0) continue;

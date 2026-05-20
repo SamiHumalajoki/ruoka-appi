@@ -170,16 +170,16 @@ function HeroCard({ stats, onArvoAll, onAcceptAll, onClear }) {
         </div>
 
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onArvoAll} disabled={empty + pending === 0} style={{
+          <button onClick={onArvoAll} disabled={empty === 0} style={{
             flex: 1, height: 48, borderRadius: 14, border: 'none',
-            background: empty + pending === 0 ? 'rgba(255,255,255,0.18)' : '#fff',
-            color: empty + pending === 0 ? 'rgba(255,255,255,0.6)' : C.turkDark,
+            background: empty === 0 ? 'rgba(255,255,255,0.18)' : '#fff',
+            color: empty === 0 ? 'rgba(255,255,255,0.6)' : C.turkDark,
             fontWeight: 700, fontSize: 15.5, fontFamily: 'inherit',
-            cursor: empty + pending === 0 ? 'default' : 'pointer',
+            cursor: empty === 0 ? 'default' : 'pointer',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
-            <Icon name="dice" size={18} color={empty + pending === 0 ? 'rgba(255,255,255,0.6)' : C.turkDark} />
-            {empty === total ? 'Arvo koko viikko' : empty + pending === total ? 'Arvo loput' : 'Arvo tyhjät'}
+            <Icon name="dice" size={18} color={empty === 0 ? 'rgba(255,255,255,0.6)' : C.turkDark} />
+            {empty === total ? 'Arvo koko viikko' : 'Arvo tyhjät'}
           </button>
           {pending > 0 && (
             <button onClick={onAcceptAll} style={{
