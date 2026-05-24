@@ -1,4 +1,5 @@
 import { MONTHS_GEN, MONTHS_SHORT } from './constants.js';
+import { INGREDIENTS_BY_ID } from './data/ingredients.js';
 
 export function mondayOf(d) {
   const x = new Date(d);
@@ -189,37 +190,62 @@ export function gatherIngredients(plan, recipes, eaters = 4) {
       const base = r.servings || 4;
       const ratio = eaters / base;
       for (const ing of r.ingredients) {
-        const p = parseQty(ing);
-        if (p.qty != null) p.qty = p.qty * ratio;
-        const key = normalizeIng(ing) || ing;
-        if (seen.has(key)) {
-          const ex = seen.get(key);
-          ex.sources.add(r.name);
-          if (p.qty != null && ex.parsed.qty != null && p.unit === ex.parsed.unit) {
-            ex.parsed.qty += p.qty;
-          } else if (p.qty != null && ex.parsed.qty == null) {
-            ex.parsed = p;
+        if (typeof ing === 'string') {
+          // Tekstimuoto (omat reseptit)
+          const p = parseQty(ing);
+          if (p.qty != null) p.qty = p.qty * ratio;
+          const key = normalizeIng(ing) || ing;
+          if (seen.has(key)) {
+            const ex = seen.get(key);
+            ex.sources.add(r.name);
+            if (p.qty != null && ex.qty != null && p.unit === ex.unit) {
+              ex.qty += p.qty;
+            } else if (p.qty != null && ex.qty == null) {
+              ex.qty = p.qty;
+              ex.unit = p.unit;
+            }
+          } else {
+            seen.set(key, {
+              key,
+              name: p.rest || p.raw,
+              qty: p.qty,
+              unit: p.unit || '',
+              sources: new Set([r.name]),
+              pantry: isPantry(ing),
+            });
           }
         } else {
-          seen.set(key, {
-            parsed: { ...p },
-            key,
-            sources: new Set([r.name]),
-            pantry: isPantry(ing),
-          });
+          // Rakenteinen muoto { id, qty?, unit? }
+          const entity = INGREDIENTS_BY_ID[ing.id];
+          const name = entity?.name ?? ing.id;
+          const pantry = entity?.pantry ?? false;
+          const qty = ing.qty != null ? ing.qty * ratio : null;
+          const unit = ing.unit ?? '';
+          const key = ing.id;
+          if (seen.has(key)) {
+            const ex = seen.get(key);
+            ex.sources.add(r.name);
+            if (qty != null && ex.qty != null && unit === ex.unit) {
+              ex.qty += qty;
+            } else if (qty != null && ex.qty == null) {
+              ex.qty = qty;
+              ex.unit = unit;
+            }
+          } else {
+            seen.set(key, { key, name, qty, unit, sources: new Set([r.name]), pantry });
+          }
         }
       }
     }
   }
   return [...seen.values()].map(it => {
-    const qtyLabel = it.parsed.qty != null
-      ? (it.parsed.unit ? `${fmtNum(it.parsed.qty)} ${it.parsed.unit}` : `${fmtNum(it.parsed.qty)}`)
+    const qtyLabel = it.qty != null
+      ? (it.unit ? `${fmtNum(it.qty)} ${it.unit}` : `${fmtNum(it.qty)}`)
       : '';
-    const name = it.parsed.rest || it.parsed.raw;
-    const qtyText = it.parsed.qty != null
-      ? (it.parsed.unit ? `${fmtNum(it.parsed.qty)} ${it.parsed.unit} ${it.parsed.rest}`.trim()
-                        : `${fmtNum(it.parsed.qty)} ${it.parsed.rest}`.trim())
-      : it.parsed.raw;
-    return { ...it, text: qtyText, qtyLabel, name };
+    const qtyText = it.qty != null
+      ? (it.unit ? `${fmtNum(it.qty)} ${it.unit} ${it.name}`.trim()
+                 : `${fmtNum(it.qty)} ${it.name}`.trim())
+      : it.name;
+    return { key: it.key, name: it.name, qtyLabel, text: qtyText, sources: it.sources, pantry: it.pantry };
   });
 }

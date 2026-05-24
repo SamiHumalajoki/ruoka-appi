@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
 import { C } from '../constants.js';
+import { fmtNum } from '../utils.js';
+import { INGREDIENTS_BY_ID } from '../data/ingredients.js';
 import Icon from './Icon.jsx';
+
+function fmtIngredient(ing) {
+  if (typeof ing === 'string') return ing;
+  const entity = INGREDIENTS_BY_ID[ing.id];
+  const name = entity?.name ?? ing.id;
+  if (ing.qty == null) return name;
+  const qty = fmtNum(ing.qty);
+  return ing.unit ? `${qty} ${ing.unit} ${name}` : `${qty} ${name}`;
+}
 
 export default function RecipeSheet({ open, recipe, status, onClose, onAccept, onReroll, onUnlock, onClear }) {
   const [tab, setTab] = useState('aineet');
@@ -112,7 +123,7 @@ export default function RecipeSheet({ open, recipe, status, onClose, onAccept, o
                     display: 'flex', alignItems: 'center', gap: 10,
                   }}>
                     <div style={{ width: 5, height: 5, borderRadius: 1, background: C.turk, flexShrink: 0 }} />
-                    {ing}
+                    {fmtIngredient(ing)}
                   </div>
                 ))}
               </div>

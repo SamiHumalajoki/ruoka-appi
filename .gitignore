@@ -1,4 +1,4 @@
 node_modules
 dist
 setup.sh
-data/
+/data/
